@@ -86,7 +86,7 @@
   <p class="hint">Server-side validation recommended for real payments. Yeh demo static hosting (Netlify/Vercel/GitHub Pages) par chalega for simple flow.</p>
 </section>
 
-  </main>  <!-- PayPal SDK: replace PAYPAL_CLIENT_ID with your client id -->  <script src="https://www.paypal.com/sdk/js?client-id=PAYPAL_CLIENT_ID&currency=INR" data-sdk-integration-source="button-factory"></script>  <script>
+  </main>  <!-- PayPal SDK: replace Acrbg7p4034Ar9tele21 with your client id -->  <script src="https://www.paypal.com/sdk/js?client-id=Acrbg7p4034Ar9tele21&currency=INR" data-sdk-integration-source="button-factory"></script>  <script>
     // Simple product store using localStorage
     const STORAGE_KEY = 'nokia_lumia_products_v1';
 
