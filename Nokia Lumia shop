@@ -1,0 +1,246 @@
+<!doctype html>
+
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nokia Lumia Shop — सरल ऑनलाइन दुकान</title>
+  <style>
+    :root{font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial;}
+    body{margin:0;background:#f5f7fb;color:#111}
+    header{background:#0b5ed7;color:white;padding:18px 20px}
+    .container{max-width:1100px;margin:20px auto;padding:0 16px}
+    h1{margin:0;font-size:20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+    .card{background:white;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(12,20,50,0.06);display:flex;flex-direction:column;gap:8px}
+    .thumb{height:160px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px;background:#fafafa}
+    .thumb img{max-width:100%;max-height:100%}
+    .title{font-weight:600}
+    .price{font-weight:700;color:#0b5ed7}
+    .actions{margin-top:auto;display:flex;gap:8px}
+    .btn{padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+    .btn.primary{background:#0b5ed7;color:white}
+    .btn.ghost{background:#eef2ff}
+    form{background:white;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(12,20,50,0.04);margin-bottom:18px}
+    label{display:block;font-size:13px;margin:8px 0 6px}
+    input[type=text], input[type=number], textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ef}
+    small.hint{color:#555}
+    footer{padding:20px;text-align:center;color:#666;font-size:13px}
+    .row{display:flex;gap:16px}
+    @media (max-width:800px){.row{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Nokia Lumia Shop — Aasaan online dukaan</h1>
+      <div style="font-size:13px;opacity:0.9;margin-top:6px">Products add karein, photo daalein, aur PayPal se paise pay karein.</div>
+    </div>
+  </header>  <main class="container">
+    <!-- SELLER FORM -->
+    <form id="productForm">
+      <h2 style="margin-top:0">Naya Product Jodein (Seller)</h2>
+      <div class="row">
+        <div style="flex:1">
+          <label>Product Name</label>
+          <input id="pname" type="text" placeholder="Nokia Lumia 520" required /><label>Price (INR)</label>
+      <input id="pprice" type="number" min="1" placeholder="4999" required />
+
+      <label>Image URL (ya image upload karein)</label>
+      <input id="pimageurl" type="text" placeholder="https://example.com/lumia.jpg" />
+
+      <label>Ya local image upload karein (browser me base64 save hoga)</label>
+      <input id="pimagefile" type="file" accept="image/*" />
+
+      <label>Description <small class="hint">(optional)</small></label>
+      <textarea id="pdesc" rows="2" placeholder="Color, condition, etc."></textarea>
+
+      <div style="margin-top:10px">
+        <button class="btn primary" type="submit">Product Save karein</button>
+        <button id="clearStorage" type="button" class="btn ghost">Saare Items Saaf karein</button>
+      </div>
+    </div>
+    <div style="width:300px">
+      <h3>Quick Add (pre-filled Lumia list)</h3>
+      <small class="hint">Ek click se common Lumia models add karein</small>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <button class="btn ghost" type="button" onclick="quickAdd('Nokia Lumia 520',2499,'https://upload.wikimedia.org/wikipedia/commons/6/6f/Lumia_520.png')">Lumia 520</button>
+        <button class="btn ghost" type="button" onclick="quickAdd('Nokia Lumia 720',6999,'https://upload.wikimedia.org/wikipedia/commons/2/2b/Lumia_720.png')">Lumia 720</button>
+        <button class="btn ghost" type="button" onclick="quickAdd('Nokia Lumia 1020',14999,'https://upload.wikimedia.org/wikipedia/commons/1/16/Lumia_1020.png')">Lumia 1020</button>
+        <button class="btn ghost" type="button" onclick="quickAdd('Nokia Lumia 1320',8999,'https://upload.wikimedia.org/wikipedia/commons/4/4a/Lumia_1320.png')">Lumia 1320</button>
+      </div>
+      <p style="font-size:12px;color:#555;margin-top:12px">Note: Example images use Wikimedia placeholders — aap apni image URL ya upload karein.</p>
+    </div>
+  </div>
+</form>
+
+<!-- PRODUCTS LIST -->
+<section>
+  <h2>Shop - Nokia Lumia Phones</h2>
+  <div id="products" class="grid" aria-live="polite"></div>
+</section>
+
+<section style="margin-top:18px">
+  <h2>Important: PayPal Setup</h2>
+  <p class="hint">PayPal integration client-side example niche diya gaya hai. Use karne ke liye aapko apna <strong>PayPal Client ID</strong> chahiye — developer.paypal.com par jaakar Live ya Sandbox client-id lein aur <code>PAYPAL_CLIENT_ID</code> ke jagah daalein.</p>
+  <p class="hint">Server-side validation recommended for real payments. Yeh demo static hosting (Netlify/Vercel/GitHub Pages) par chalega for simple flow.</p>
+</section>
+
+  </main>  <!-- PayPal SDK: replace PAYPAL_CLIENT_ID with your client id -->  <script src="https://www.paypal.com/sdk/js?client-id=PAYPAL_CLIENT_ID&currency=INR" data-sdk-integration-source="button-factory"></script>  <script>
+    // Simple product store using localStorage
+    const STORAGE_KEY = 'nokia_lumia_products_v1';
+
+    function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+
+    function loadProducts(){
+      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') }catch(e){return []}
+    }
+    function saveProducts(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)) }
+
+    // Render products to grid
+    function render(){
+      const container = document.getElementById('products');
+      container.innerHTML = '';
+      const products = loadProducts();
+      if(products.length===0){container.innerHTML = '<p style="color:#555">Koi product nahin — product add karein ya Quick Add buttons use karein.</p>'; return}
+
+      products.forEach(p=>{
+        const card = document.createElement('div'); card.className='card';
+        const thumb = document.createElement('div'); thumb.className='thumb';
+        const img = document.createElement('img'); img.alt = p.name; img.src = p.image || '';
+        img.onerror = ()=>{ img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="%23f5f7fb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23999">Image not found</text></svg>' }
+        thumb.appendChild(img);
+        const title = document.createElement('div'); title.className='title'; title.textContent = p.name;
+        const desc = document.createElement('div'); desc.style.fontSize='13px'; desc.style.color='#444'; desc.textContent = p.desc||'';
+        const price = document.createElement('div'); price.className='price'; price.textContent = '₹ ' + Number(p.price).toLocaleString('en-IN');
+        const actions = document.createElement('div'); actions.className='actions';
+
+        // PayPal button container
+        const paypalDiv = document.createElement('div'); paypalDiv.id = 'pp-' + p.id; paypalDiv.style.minWidth='140px';
+
+        // Edit/Delete
+        const editBtn = document.createElement('button'); editBtn.className='btn ghost'; editBtn.textContent='Edit'; editBtn.onclick = ()=> editProduct(p.id);
+        const delBtn = document.createElement('button'); delBtn.className='btn'; delBtn.textContent='Delete'; delBtn.onclick = ()=> { if(confirm('Delete this product?')){ deleteProduct(p.id) } };
+
+        actions.appendChild(paypalDiv);
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+
+        card.appendChild(thumb);
+        card.appendChild(title);
+        card.appendChild(desc);
+        card.appendChild(price);
+        card.appendChild(actions);
+
+        container.appendChild(card);
+
+        // Render PayPal button for this product
+        setupPayPalButton(p);
+      })
+    }
+
+    function setupPayPalButton(product){
+      // Ensure PayPal SDK loaded
+      if(!window.paypal){
+        const el = document.getElementById('pp-'+product.id);
+        el.innerHTML = '<small style="color:#a00">PayPal SDK not loaded. Check your client id in the script URL.</small>';
+        return;
+      }
+
+      // Clean previous (if re-render)
+      const container = document.getElementById('pp-'+product.id);
+      container.innerHTML = '';
+
+      paypal.Buttons({
+        style:{layout:'vertical',label:'paypal',height:28},
+        createOrder: function(data, actions) {
+          // amount in INR
+          return actions.order.create({
+            purchase_units: [{
+              amount: { value: String(product.price) },
+              description: product.name
+            }]
+          });
+        },
+        onApprove: function(data, actions) {
+          return actions.order.capture().then(function(details) {
+            alert('Payment successful! Payer: ' + (details.payer.name?.given_name || '') + '\nOrderID: ' + data.orderID);
+            // Optional: mark as sold / send notification — add your server webhook logic here
+          });
+        },
+        onError: function(err){
+          console.error(err); alert('PayPal error: ' + (err && err.message));
+        }
+      }).render('#pp-'+product.id);
+    }
+
+    // Product form
+    document.getElementById('productForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const name = document.getElementById('pname').value.trim();
+      const price = Number(document.getElementById('pprice').value);
+      const url = document.getElementById('pimageurl').value.trim();
+      const file = document.getElementById('pimagefile').files[0];
+      const desc = document.getElementById('pdesc').value.trim();
+
+      let image = url || '';
+      if(!image && file){ image = await fileToBase64(file) }
+
+      const products = loadProducts();
+      const item = { id: uid(), name, price, image, desc };
+      products.unshift(item);
+      saveProducts(products);
+      this.reset();
+      render();
+      window.scrollTo({top:0,behavior:'smooth'});
+    })
+
+    document.getElementById('clearStorage').addEventListener('click', ()=>{
+      if(confirm('Local products saaf karein? (Isse sab products delete ho jayenge)')){ localStorage.removeItem(STORAGE_KEY); render() }
+    })
+
+    function fileToBase64(file){
+      return new Promise((res,rej)=>{
+        const r = new FileReader(); r.onload = ()=> res(r.result); r.onerror = rej; r.readAsDataURL(file);
+      })
+    }
+
+    function quickAdd(name, price, image){
+      const products = loadProducts(); products.unshift({id:uid(),name,price,image,desc:'Pre-filled Nokia Lumia model.'}); saveProducts(products); render();
+    }
+
+    function deleteProduct(id){
+      let products = loadProducts(); products = products.filter(p=>p.id!==id); saveProducts(products); render();
+    }
+
+    function editProduct(id){
+      const products = loadProducts(); const p = products.find(x=>x.id===id); if(!p) return alert('Product not found');
+      // load into form for editing (simple replace flow)
+      document.getElementById('pname').value = p.name;
+      document.getElementById('pprice').value = p.price;
+      document.getElementById('pimageurl').value = p.image && p.image.startsWith('data:') ? '' : p.image;
+      document.getElementById('pdesc').value = p.desc || '';
+      // remove old product then allow user to press Save to re-add as new
+      deleteProduct(id);
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    // Initialize with some sample Lumia products if storage empty
+    (function initSample(){
+      const cur = loadProducts();
+      if(cur.length===0){
+        const samples = [
+          {id:uid(), name:'Nokia Lumia 520', price:2499, image:'https://upload.wikimedia.org/wikipedia/commons/6/6f/Lumia_520.png', desc:'Classic budget Lumia.'},
+          {id:uid(), name:'Nokia Lumia 720', price:6999, image:'https://upload.wikimedia.org/wikipedia/commons/2/2b/Lumia_720.png', desc:'Stylish mid-range.'},
+          {id:uid(), name:'Nokia Lumia 1020', price:14999, image:'https://upload.wikimedia.org/wikipedia/commons/1/16/Lumia_1020.png', desc:'Camera-centric flagship.'}
+        ];
+        saveProducts(samples);
+      }
+      render();
+    })();
+
+  </script>  <footer>
+    <div class="container">Made with ♥ — static demo. Replace <code>PAYPAL_CLIENT_ID</code> in the PayPal SDK script with your real client id from developer.paypal.com to accept real payments.</div>
+  </footer>
+</body>
+</html>
